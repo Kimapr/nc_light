@@ -193,8 +193,7 @@ nodecore.register_craft({
 		action = "pummel",
 		wield = {name = "nc_fire:lump_coal", count = 1},
 		nodes = {
-				{match = modname .. ":lantern_"..aburns},
-				{replace = modname .. ":lantern_"..fuel}
+				{match = modname .. ":lantern_"..aburns, replace = modname .. ":lantern_"..fuel}
 			}
 	})
 
