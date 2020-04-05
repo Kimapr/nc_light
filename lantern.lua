@@ -68,6 +68,7 @@ local function lantern (fuel) -- Kimapr: deleted these redundant arguments (fuel
 
 local burn = fuel-1
 local aburns = burn == 0 and "empty" or burn -- nodename suffix after burn
+local light = fuel + 6
 
 minetest.register_node(modname .. ":lantern_" .. fuel, {
 	description = "Lantern",
@@ -186,7 +187,6 @@ nodecore.register_aism({
 
 ----------------------------------------
 -------------Lantern Refill-------------
-if fuel <= nodecore.max_lantern_fuel then
 
 nodecore.register_craft({
 		label = "refill lantern",
@@ -196,8 +196,6 @@ nodecore.register_craft({
 				{match = modname .. ":lantern_"..aburns, replace = modname .. ":lantern_"..fuel}
 			}
 	})
-
-end
 
 ----------------------------------------
 ------------Lantern Ambiance------------
