@@ -292,11 +292,6 @@ end
 end
 
 --Lantern-Fuel-Burn-Energy-Light-Refill--
-lantern	("1",	"0",	1,	7,	"2")
-lantern	("2",	"1",	2,	8,	"3")
-lantern	("3",	"2",	3,	9,	"4")
-lantern	("4",	"3",	4,	10,	"5")
-lantern	("5",	"4",	5,	11,	"6")
-lantern	("6",	"5",	6,	12,	"7")
-lantern	("7",	"6",	7,	13,	"8")
-lantern	("8",	"7",	8,	14,	"8")
+for n=1,nodecore.max_lantern_fuel do
+  lantern(n)
+end
