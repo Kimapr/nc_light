@@ -67,7 +67,7 @@ nodecore.register_craft({
 local function lantern (fuel) -- Kimapr: deleted these redundant arguments (fuel, burn, energy, light, refill)
 
 local burn = fuel-1
-local aburns = burn == 0 and "empty" or burn -- nodename suffix after burn
+local aburns = burn == 0 and "empty" or "lit_"..burn -- nodename suffix after burn
 local light = fuel + 6
 
 minetest.register_node(modname .. ":lantern_" .. fuel, {
@@ -160,7 +160,7 @@ nodecore.register_abm({
 		nodenames = {modname .. ":lantern_lit_" .. fuel},
 		action = function(pos)
 			minetest.sound_play("nc_fire_flamy", {gain = 0.4, pos = pos})
-			return minetest.set_node(pos, {name = modname .. ":lantern_lit_" .. aburns})
+			return minetest.set_node(pos, {name = modname .. ":lantern_" .. aburns})
 		end
 	})
 -- Kimapr: merged two ABMs into one
@@ -175,7 +175,7 @@ nodecore.register_aism({
 						if data.player and (data.list ~= "main"
 								or data.slot ~= data.player:get_wield_index()) then return end
 						minetest.sound_play("nc_fire_flamy", {gain = 0.4, pos = data.pos})
-						stack:set_name(modname .. ":lantern_lit_" .. aburns)
+						stack:set_name(modname .. ":lantern_" .. aburns)
 						return stack
 				end
 		})
