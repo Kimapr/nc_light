@@ -64,6 +64,8 @@ nodecore.register_craft({
 
 ----------------------------------------
 -----------FUELED LANTERN OFF-----------
+local lnodes = {}
+
 local function lantern (fuel) -- Kimapr: deleted these redundant arguments (fuel, burn, energy, light, refill)
 
 local burn = fuel-1
@@ -149,6 +151,9 @@ minetest.register_node(modname .. ":lantern_lit_" .. fuel, {
 		stack_max = 1,
 		sounds = nodecore.sounds("nc_lode_annealed")
 	})
+	
+lnodes[light] = nodecore.dynamic_light_node(light)
+lnodes[light-2] = nodecore.dynamic_light_node(light-2)
 
 ----------------------------------------
 ------------Fuel Consumption------------
@@ -211,6 +216,8 @@ nodecore.register_ambiance({
 		sound_gain = 0.1
 	})
 
+end
+
 ----------------------------------------
 --------------WHEN WIELDED--------------
 local litgroup = {}
@@ -227,11 +234,9 @@ end
 
 local function snuffinv(player, inv, i)
 	minetest.sound_play("nc_fire_snuff", {object = player, gain = 0.5})
-	inv:set_stack("main", i, {modname .. ":lantern_" .. fuel})
+	inv:set_stack("main", i, modname .. ":lantern_empty")
 end
 
-local bright = nodecore.dynamic_light_node(light)
-local dim = nodecore.dynamic_light_node(light - 2)
 
 local ambtimers = {}
 minetest.register_globalstep(function()
@@ -243,12 +248,15 @@ minetest.register_globalstep(function()
 			-- Snuff all lanterns if doused in water.
 			local hpos = vector.add(ppos, {x = 0, y = 1, z = 0})
 			local head = minetest.get_node(hpos).name
+			local wielditem = player:get_wielded_item()
+			local wdef = minetest.registered_items[wielditem:get_name()]
 			if minetest.get_item_group(head, "water") > 0 then
 				for i = 1, inv:get_size("main") do
 					local stack = inv:get_stack("main", i)
 					if islit(stack) then snuffinv(player, inv, i) end
 				end
 			elseif islit(player:get_wielded_item()) then
+				local bright = lnodes[wdef.light_source]
 				-- Wield light
 				local name = player:get_player_name()
 				nodecore.dynamic_light_add(hpos, bright, 0.5)
@@ -263,7 +271,10 @@ minetest.register_globalstep(function()
 			else
 				-- Dimmer non-wielded carry light
 				for i = 1, inv:get_size("main") do
-					if islit(inv:get_stack("main", i)) then
+					local stack = inv:get_stack("main", i)
+					if islit(stack) then
+						local def = minetest.registered_items[stack:get_name()]
+						local dim = lnodes[def.light_source - 2]
 						nodecore.dynamic_light_add(hpos, dim, 0.5)
 					end
 				end
@@ -274,7 +285,9 @@ minetest.register_globalstep(function()
 -- Apply wield light to entities as well.
 local function entlight(self, ...)
 	local stack = ItemStack(self.node and self.node.name or self.itemstring or "")
+	local def = minetest.registered_items[stack:get_name()]
 	if not islit(stack) then return ... end
+	local bright = lnodes[def.light_source]
 	nodecore.dynamic_light_add(self.object:get_pos(), bright, 0.5)
 	return ...
 end
@@ -287,8 +300,6 @@ for _, name in pairs({"item", "falling_node"}) do
 	}
 	setmetatable(ndef, def)
 	minetest.register_entity(":__builtin:" .. name, ndef)
-end
-
 end
 
 --Lantern-Fuel-Burn-Energy-Light-Refill--
