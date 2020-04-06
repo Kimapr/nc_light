@@ -45,6 +45,7 @@ minetest.register_node(modname .. ":lantern_empty", {
 			stack_as_node = 1,
 			snappy = 1,
 			lantern = 1,
+			lantern_fuel = 0,
 			lantern_off =1
 		},
 		stack_max = 1,
@@ -103,6 +104,7 @@ minetest.register_node(modname .. ":lantern_" .. fuel, {
 			stack_as_node = 1,
 			snappy = 1,
 			lantern_off = 1,
+			lantern_fuel = fuel,
 			lantern = 1
 		},
 		stack_max = 1,
@@ -146,6 +148,7 @@ minetest.register_node(modname .. ":lantern_lit_" .. fuel, {
 			stack_as_node = 1,
 			snappy = 1,
 			lantern_lit = 1,
+			lantern_fuel = fuel,
 			lantern = 1
 		},
 		stack_max = 1,
@@ -158,6 +161,19 @@ lnodes[light-2] = nodecore.dynamic_light_node(light-2)
 ----------------------------------------
 ------------Fuel Consumption------------
 -----Placed-----
+nodecore.register_abm({
+		label = "Lantern Quenching",
+		interval = 0.1,
+		chance = 1,
+		nodenames = {modname .. ":lantern_lit_" .. fuel},
+		action = function(pos)
+			if nodecore.quenched(pos) then
+				nodecore.sound_play("nc_fire_snuff", {gain = 1, pos = pos})
+				return minetest.set_node(pos, {name = modname .. ":lantern_"..fuel})
+			end
+		end
+	})
+
 nodecore.register_abm({
 		label = "Lantern Fuel Use",
 		interval = 10,
@@ -172,13 +188,34 @@ nodecore.register_abm({
 
 -----Carried-----
 nodecore.register_aism({
+				label = "Lantern Quenching",
+				interval = 0.1,
+				chance = 1,
+				itemnames = {modname .. ":lantern_lit_" .. fuel},
+				action = function(stack, data)
+						local pos = data.pos
+						local player = data.player
+						ext = true
+						if player then
+							if data.list ~= "main" or player:get_wield_index()
+							~= data.slot then ext = false end
+							pos = vector.add(pos, vector.multiply(player:get_look_dir(), 0.5))
+						end
+
+						if ext and nodecore.quenched(pos, data.node and 1 or 0.3) then
+							nodecore.sound_play("nc_fire_snuff", {gain = 1, pos = pos})
+							stack:set_name(modname .. "lantern_"..fuel)
+							return stack
+						end
+				end
+})
+
+nodecore.register_aism({
 				label = "Held Fuel Use",
 				interval = 10,
 				chance = 1,
 				itemnames = {modname .. ":lantern_lit_" .. fuel},
 				action = function(stack, data)
-						if data.player and (data.list ~= "main"
-								or data.slot ~= data.player:get_wield_index()) then return end
 						minetest.sound_play("nc_fire_flamy", {gain = 0.4, pos = data.pos})
 						stack:set_name(modname .. ":lantern_" .. aburns)
 						return stack
@@ -232,9 +269,9 @@ local function islit(stack)
 	return stack and litgroup[stack:get_name()]
 end
 
-local function snuffinv(player, inv, i)
+local function snuffinv(player, inv, i, fuel)
 	minetest.sound_play("nc_fire_snuff", {object = player, gain = 0.5})
-	inv:set_stack("main", i, modname .. ":lantern_empty")
+	inv:set_stack("main", i, modname .. ":lantern_"..fuel)
 end
 
 
@@ -253,7 +290,7 @@ minetest.register_globalstep(function()
 			if minetest.get_item_group(head, "water") > 0 then
 				for i = 1, inv:get_size("main") do
 					local stack = inv:get_stack("main", i)
-					if islit(stack) then snuffinv(player, inv, i) end
+					if islit(stack) then snuffinv(player, inv, i, minetest.get_item_group(stack:get_name(),"lantern_fuel")) end
 				end
 			elseif islit(player:get_wielded_item()) then
 				local bright = lnodes[wdef.light_source]
