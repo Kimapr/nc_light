@@ -1,6 +1,6 @@
 -- LUALOCALS < ---------------------------------------------------------
 local ItemStack, math, minetest, nodecore, pairs, setmetatable, vector
-    = ItemStack, math, minetest, nodecore, pairs, setmetatable, vector
+		= ItemStack, math, minetest, nodecore, pairs, setmetatable, vector
 -- LUALOCALS > ---------------------------------------------------------
 local modname = minetest.get_current_modname()
 local checkdirs = {
@@ -108,6 +108,7 @@ minetest.register_node(modname .. ":lantern_" .. fuel, {
 		on_ignite = function(pos, node)
 			minetest.set_node(pos, {name = modname .. ":lantern_lit_" .. fuel})
 			minetest.sound_play("nc_fire_ignite", {gain = 1, pos = pos})
+			return true
 			end
 	})
 
@@ -168,21 +169,21 @@ nodecore.register_abm({
 
 -----Carried-----
 nodecore.register_aism({
-        label = "Held Fuel Use",
-        interval = 10,
-        chance = 1,
-        itemnames = {modname .. ":lantern_lit_" .. fuel},
-        action = function(stack, data)
-            if data.player and (data.list ~= "main"
-                or data.slot ~= data.player:get_wield_index()) then return end
-            if fuel > 1 then
-                minetest.sound_play("nc_fire_flamy", {gain = 0.4, pos = data.pos})
-                stack:set_name(modname .. ":lantern_lit_" .. aburns)
-                return stack
-            end
-        end
-    })
-    
+				label = "Held Fuel Use",
+				interval = 10,
+				chance = 1,
+				itemnames = {modname .. ":lantern_lit_" .. fuel},
+				action = function(stack, data)
+						if data.player and (data.list ~= "main"
+								or data.slot ~= data.player:get_wield_index()) then return end
+						if fuel > 1 then
+								minetest.sound_play("nc_fire_flamy", {gain = 0.4, pos = data.pos})
+								stack:set_name(modname .. ":lantern_lit_" .. aburns)
+								return stack
+						end
+				end
+		})
+		
 -- Kimapr: merged two AISMs into one
 
 ----------------------------------------
@@ -191,7 +192,13 @@ nodecore.register_aism({
 nodecore.register_craft({
 		label = "refill lantern",
 		action = "pummel",
-		wield = {name = "nc_fire:lump_coal", count = 1},
+		wield = {name = "nc_fire:lump_coal"},
+		after = function(pos, data)
+			local ref = minetest.get_player_by_name(data.pname)
+			local wield = ref:get_wielded_item()
+			wield:take_item(1)
+			ref:set_wielded_item(wield)
+		end,
 		nodes = {
 				{match = modname .. ":lantern_"..aburns, replace = modname .. ":lantern_"..fuel}
 			}
@@ -290,5 +297,5 @@ end
 
 --Lantern-Fuel-Burn-Energy-Light-Refill--
 for n=1,nodecore.max_lantern_fuel do
-  lantern(n)
+	lantern(n)
 end
