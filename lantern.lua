@@ -71,6 +71,7 @@ local function lantern (fuel) -- Kimapr: deleted these redundant arguments (fuel
 
 local burn = fuel-1
 local aburns = burn == 0 and "empty" or "lit_"..burn -- nodename suffix after burn
+local aburn = burn == 0 and "empty" or burn
 local light = fuel + 6
 
 minetest.register_node(modname .. ":lantern_" .. fuel, {
@@ -227,20 +228,36 @@ nodecore.register_aism({
 ----------------------------------------
 -------------Lantern Refill-------------
 
+local rfcall = function(pos, data)
+	local ref = minetest.get_player_by_name(data.pname)
+	local wield = ref:get_wielded_item()
+	wield:take_item(1)
+	ref:set_wielded_item(wield)
+end
+
 nodecore.register_craft({
 		label = "refill lantern",
 		action = "pummel",
 		wield = {name = "nc_fire:lump_coal"},
-		after = function(pos, data)
-			local ref = minetest.get_player_by_name(data.pname)
-			local wield = ref:get_wielded_item()
-			wield:take_item(1)
-			ref:set_wielded_item(wield)
-		end,
+		after = rfcall,
 		nodes = {
-				{match = modname .. ":lantern_"..aburns, replace = modname .. ":lantern_"..fuel}
+				{match = modname .. ":lantern_"..aburn, replace = modname .. ":lantern_"..fuel}
 			}
 	})
+	
+if fuel > 1 then
+
+nodecore.register_craft({
+		label = "refill lit lantern",
+		action = "pummel",
+		wield = {name = "nc_fire:lump_coal"},
+		after = rfcall,
+		nodes = {
+				{match = modname .. ":lantern_"..aburns, replace = modname .. ":lantern_lit_"..fuel}
+			}
+	})
+
+end
 
 ----------------------------------------
 ------------Lantern Ambiance------------
