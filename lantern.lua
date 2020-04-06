@@ -159,10 +159,8 @@ nodecore.register_abm({
 		chance = 1,
 		nodenames = {modname .. ":lantern_lit_" .. fuel},
 		action = function(pos)
-			if fuel > 1 then
-				minetest.sound_play("nc_fire_flamy", {gain = 0.4, pos = pos})
-				return minetest.set_node(pos, {name = modname .. ":lantern_lit_" .. aburns})
-			end
+			minetest.sound_play("nc_fire_flamy", {gain = 0.4, pos = pos})
+			return minetest.set_node(pos, {name = modname .. ":lantern_lit_" .. aburns})
 		end
 	})
 -- Kimapr: merged two ABMs into one
@@ -176,11 +174,9 @@ nodecore.register_aism({
 				action = function(stack, data)
 						if data.player and (data.list ~= "main"
 								or data.slot ~= data.player:get_wield_index()) then return end
-						if fuel > 1 then
-								minetest.sound_play("nc_fire_flamy", {gain = 0.4, pos = data.pos})
-								stack:set_name(modname .. ":lantern_lit_" .. aburns)
-								return stack
-						end
+						minetest.sound_play("nc_fire_flamy", {gain = 0.4, pos = data.pos})
+						stack:set_name(modname .. ":lantern_lit_" .. aburns)
+						return stack
 				end
 		})
 		
